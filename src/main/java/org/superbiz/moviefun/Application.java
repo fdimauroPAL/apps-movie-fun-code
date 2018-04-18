@@ -1,11 +1,14 @@
 package org.superbiz.moviefun;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.metadata.HikariDataSourcePoolMetadata;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -27,12 +30,12 @@ import javax.sql.DataSource;
 })
 public class Application {
 
+    @Value("${VCAP_SERVICES}")
+    String vcap_services;
+
     public static void main(String... args) {
         SpringApplication.run(Application.class, args);
     }
-
-    @Value("${VCAP_SERVICES}")
-    String vcap_services;
 
     @Bean
     public ServletRegistrationBean actionServletRegistration(ActionServlet actionServlet) {
@@ -40,22 +43,38 @@ public class Application {
     }
 
     @Bean
-
     public DatabaseServiceCredentials setCredentials() {
         return new DatabaseServiceCredentials(vcap_services);
     }
 
     @Bean("albumsDataSource")
     public DataSource albumsDataSource(DatabaseServiceCredentials serviceCredentials) {
-        MysqlDataSource dataSource = new MysqlDataSource();
-        dataSource.setURL(serviceCredentials.jdbcUrl("albums-mysql", "p-mysql"));
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(serviceCredentials.jdbcUrl("albums-mysql", "p-mysql"));
+        //config.setUsername("root");
+        //config.setPassword("password");
+        config.setMaximumPoolSize(10);
+        config.setAutoCommit(false);
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        DataSource dataSource = new HikariDataSource(config);
+
         return dataSource;
     }
 
     @Bean("moviesDataSource")
     public DataSource moviesDataSource(DatabaseServiceCredentials serviceCredentials) {
-        MysqlDataSource dataSource = new MysqlDataSource();
-        dataSource.setURL(serviceCredentials.jdbcUrl("movies-mysql", "p-mysql"));
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(serviceCredentials.jdbcUrl("movies-mysql", "p-mysql"));
+        //config.setUsername("root");
+        //config.setPassword("password");
+        config.setMaximumPoolSize(10);
+        config.setAutoCommit(false);
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        DataSource dataSource = new HikariDataSource(config);
         return dataSource;
     }
 

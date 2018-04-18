@@ -39,4 +39,8 @@ public class AlbumsBean {
         cq.select(cq.from(Album.class));
         return entityManager.createQuery(cq).getResultList();
     }
+
+    public void clean() {
+        entityManager.createQuery("delete from Album").executeUpdate();
+    }
 }

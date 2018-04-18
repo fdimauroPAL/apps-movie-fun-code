@@ -48,6 +48,7 @@ public class HomeController {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
                 try {
+                    moviesBean.clean();
                     for (Movie movie : movieFixtures.load()) {
                         moviesBean.addMovie(movie);
                     }
@@ -64,6 +65,7 @@ public class HomeController {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
                 try {
+                    albumsBean.clean();
                     for (Album album : albumFixtures.load()) {
                         albumsBean.addAlbum(album);
                     }
@@ -73,8 +75,6 @@ public class HomeController {
                 }
             }
         });
-
-
 
 
         return "setup";
