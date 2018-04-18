@@ -47,35 +47,28 @@ public class Application {
         return new DatabaseServiceCredentials(vcap_services);
     }
 
-    @Bean("albumsDataSource")
+    @Bean
     public DataSource albumsDataSource(DatabaseServiceCredentials serviceCredentials) {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(serviceCredentials.jdbcUrl("albums-mysql", "p-mysql"));
-        //config.setUsername("root");
-        //config.setPassword("password");
-        config.setMaximumPoolSize(10);
-        config.setAutoCommit(false);
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        DataSource dataSource = new HikariDataSource(config);
+        MysqlDataSource dataSource = new MysqlDataSource();
+        dataSource.setURL(serviceCredentials.jdbcUrl("albums-mysql", "p-mysql"));
 
-        return dataSource;
+        HikariConfig config = new HikariConfig();
+        config.setDataSource(dataSource);
+
+        DataSource cachedDataSource = new HikariDataSource(config);
+        return cachedDataSource;
     }
 
-    @Bean("moviesDataSource")
+    @Bean
     public DataSource moviesDataSource(DatabaseServiceCredentials serviceCredentials) {
+        MysqlDataSource dataSource = new MysqlDataSource();
+        dataSource.setURL(serviceCredentials.jdbcUrl("movies-mysql", "p-mysql"));
+
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(serviceCredentials.jdbcUrl("movies-mysql", "p-mysql"));
-        //config.setUsername("root");
-        //config.setPassword("password");
-        config.setMaximumPoolSize(10);
-        config.setAutoCommit(false);
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        DataSource dataSource = new HikariDataSource(config);
-        return dataSource;
+        config.setDataSource(dataSource);
+
+        DataSource cachedDataSource = new HikariDataSource(config);
+        return cachedDataSource;
     }
 
     @Bean
@@ -88,7 +81,7 @@ public class Application {
         return adapter;
     }
 
-    @Bean("albumsFactory")
+    @Bean
     public LocalContainerEntityManagerFactoryBean albumsFactory(@Qualifier("albumsDataSource") DataSource dataSource, HibernateJpaVendorAdapter hibernateJpaVendorAdapter) {
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
         factory.setDataSource(dataSource);
@@ -99,7 +92,7 @@ public class Application {
         return factory;
     }
 
-    @Bean("moviesFactory")
+    @Bean
     public LocalContainerEntityManagerFactoryBean moviesFactory(@Qualifier("moviesDataSource") DataSource dataSource, HibernateJpaVendorAdapter hibernateJpaVendorAdapter) {
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
         factory.setDataSource(dataSource);
@@ -110,12 +103,12 @@ public class Application {
         return factory;
     }
 
-    @Bean("albumsTransactionManager")
+    @Bean
     public PlatformTransactionManager albumsTransactionManager(@Qualifier("albumsFactory")EntityManagerFactory entityManagerFactory){
        return new JpaTransactionManager(entityManagerFactory);
     }
 
-    @Bean("moviesTransactionManager")
+    @Bean
     public PlatformTransactionManager moviesTransactionManager(@Qualifier("moviesFactory")EntityManagerFactory entityManagerFactory){
         return new JpaTransactionManager(entityManagerFactory);
     }
